@@ -1,3 +1,4 @@
+import 'package:day_to_day_fresh/product_detail_screen/product_detail_screen.dart';
 import 'package:day_to_day_fresh/splash_screen/splash_screen.dart';
 import 'package:flutter/material.dart';
 

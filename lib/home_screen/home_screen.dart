@@ -1,6 +1,10 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
+import '../product_detail_screen/product_detail_screen.dart';
 // Data Models
 class Product {
   final String name;
@@ -50,12 +54,12 @@ class GroceryHomeScreen extends StatelessWidget {
     ];
 
     final List<Category> vegetableCategories = [
-      Category(name: 'Broccoli', imagePath: 'https://i.imgur.com/N6wEpcS.png'),
-      Category(name: 'Cabbage', imagePath: 'https://i.imgur.com/8Nf3bBq.png'),
-      Category(name: 'Onion', imagePath: 'https://i.imgur.com/Y1pGjP5.png'),
-      Category(name: 'Peas', imagePath: 'https://i.imgur.com/OAN9Q90.png'),
-      Category(name: 'Corn', imagePath: 'https://i.imgur.com/c635F7m.png'),
-      Category(name: 'Tomatoe', imagePath: 'https://i.imgur.com/Qk7xWDB.png'),
+      Category(name: 'Broccoli', imagePath: 'assets/images/broccoli.png'),
+      Category(name: 'Cabbage', imagePath: 'assets/images/cabbage.png'),
+      Category(name: 'Onion', imagePath: 'assets/images/onion.png'),
+      Category(name: 'Peas', imagePath: 'assets/images/peas.png'),
+      Category(name: 'Corn', imagePath: 'assets/images/corn.png'),
+      Category(name: 'Tomatoe', imagePath: 'assets/images/tomatoe.png'),
     ];
 
     return Scaffold(
@@ -124,10 +128,14 @@ class _TopHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Your Location', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                const Text('Gandhinagar, Gujarat.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text('Gandhinagar, Gujarat.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14,color: Color(0xFF407A47))),
               ],
             ),
           ],
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.wallet, size: 28,color: Colors.amber,),
         ),
         IconButton(
           onPressed: () {},
@@ -173,94 +181,95 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-class _PromoBanners extends StatelessWidget {
+class _PromoBanners extends StatefulWidget {
   final PageController pageController;
   const _PromoBanners({required this.pageController});
 
   @override
+  State<_PromoBanners> createState() => _PromoBannersState();
+}
+
+class _PromoBannersState extends State<_PromoBanners> {
+  // A list of our banner images
+  final List<String> _bannerImages = [
+    'assets/images/Banner1.png',
+    'assets/images/ban.png',
+    'assets/images/banner3.png',
+  ];
+
+  Timer? _timer;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the timer when the widget is initialized
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    // Cancel the timer when the widget is removed from the screen
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    // Create a periodic timer that fires every 3 seconds
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_currentPage < _bannerImages.length - 1) {
+        _currentPage++;
+      } else {
+        // Loop back to the first page
+        _currentPage = 0;
+      }
+
+      // Animate to the next page
+      if (widget.pageController.hasClients) {
+        widget.pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // This helper widget creates a rounded image banner.
+    Widget buildBannerImage(String imagePath) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20.0),
+          child: Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            // Add an error builder for robustness
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(child: Icon(Icons.image_not_supported, color: Colors.grey));
+            },
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       height: 160,
       child: PageView(
-        controller: pageController,
-        children: [
-          _buildPromoCard(
-            gradientColors: [const Color(0xFF53E88B), const Color(0xFF15BE77)],
-            title: 'Straight from\nthe garden',
-            subtitle: 'Freshness Delivered',
-            buttonText: 'Find Out',
-            imagePath: 'assets/images/Banner1.png', // Basket
-          ),
-          _buildPromoCard(
-            gradientColors: [Colors.yellow.shade600, Colors.orange.shade400],
-            title: 'Straight to\nyour doorstep',
-            subtitle: 'Skip the store',
-            buttonText: 'Order Now',
-            imagePath: 'https://i.imgur.com/W23EfPN.png', // Bag
-          ),
-          _buildPromoCard(
-            gradientColors: [Colors.orange.shade400, Colors.deepOrange.shade300],
-            title: 'Save now\nthank us later',
-            subtitle: 'Up to 40% Offer',
-            buttonText: 'Claim Offer',
-            imagePath: 'https://i.imgur.com/978K9QW.png', // Box
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPromoCard({
-    required List<Color> gradientColors,
-    required String title,
-    required String subtitle,
-    required String buttonText,
-    required String imagePath,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            bottom: -20,
-            child: Image.asset(imagePath, height: 140),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                const SizedBox(height: 5),
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: Text(buttonText),
-                ),
-              ],
-            ),
-          ),
-        ],
+        controller: widget.pageController,
+        // Update the current page when the user swipes manually
+        onPageChanged: (int page) {
+          setState(() {
+            _currentPage = page;
+          });
+        },
+        children: _bannerImages.map((path) => buildBannerImage(path)).toList(),
       ),
     );
   }
 }
-
 class _CategoryTabs extends StatelessWidget {
   const _CategoryTabs();
   @override
@@ -323,39 +332,44 @@ class _ProductGrid extends StatelessWidget {
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200, width: 1),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Center(child: Image.asset(product.imagePath, fit: BoxFit.cover,height: 150,width: 150,)),
-              ),
-              const SizedBox(height: 10),
-              Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text(product.unit, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              //const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('₹${product.price}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  CircleAvatar(
-                    backgroundColor: Colors.orange,
-                    radius: 16,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: () {},
-                      icon: const Icon(Icons.add, color: Colors.white, size: 18),
+        return GestureDetector(
+          onTap: (){
+           Navigator.push(context, MaterialPageRoute(builder: (context)=>ProductDetailScreen()));
+          },
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200, width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Center(child: Image.asset(product.imagePath, fit: BoxFit.cover,height: 150,width: 150,)),
+                ),
+                const SizedBox(height: 10),
+                Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(product.unit, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                //const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('₹${product.price}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    CircleAvatar(
+                      backgroundColor: Colors.orange,
+                      radius: 16,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () {},
+                        icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -382,28 +396,50 @@ class _CategorySection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
+        // We increase the overall height of the horizontal list significantly.
+        // This height is now the main factor controlling the image size.
         SizedBox(
-          height: 90,
+          height: 110,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
-              return Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child:Image.asset(category.imagePath),
+              // We give each item a fixed width to control its size in the list.
+              return SizedBox(
+                width: 95,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: Column(
+                    children: [
+                      // --- THIS IS THE KEY CHANGE ---
+                      // Expanded makes its child (the Container) fill all available
+                      // vertical space within the Column.
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(8.0), // Reduced padding to maximize image area
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade200, width: 1),
+                          ),
+                          child: Image.asset(
+                            category.imagePath,
+                            fit: BoxFit.cover,
+
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(category.name, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-                  ],
+                      // -------------------------------
+                      const SizedBox(height: 8),
+                      Text(
+                        category.name,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

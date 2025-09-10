@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-
 import '../location_screen/location_screen.dart';
 
 
@@ -27,10 +26,10 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Container(
         child: Center(
           child: Image.asset(
-            "assets/images/day_2_day_fresh.jpg",
+            "assets/images/day_2_day_fresh.png",
             fit: BoxFit.cover,
-            height: 200,
-            width: 200,
+            height: 500,
+            width: 510,
           ),
         ),
       ),

@@ -179,6 +179,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.amber)
       ),
       child: Row(
         children: [

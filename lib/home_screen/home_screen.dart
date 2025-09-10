@@ -1,10 +1,11 @@
-
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-
+import '../add_money_screen/add_money_screen.dart';
+import '../cart_screen/cart_screen.dart';
 import '../product_detail_screen/product_detail_screen.dart';
+import '../profile_screen/profile_screen.dart';
+
 // Data Models
 class Product {
   final String name;
@@ -27,8 +28,65 @@ class Category {
   Category({required this.name, required this.imagePath});
 }
 
-class GroceryHomeScreen extends StatelessWidget {
+class GroceryHomeScreen extends StatefulWidget {
   const GroceryHomeScreen({super.key});
+
+  @override
+  State<GroceryHomeScreen> createState() => _GroceryHomeScreenState();
+}
+
+class _GroceryHomeScreenState extends State<GroceryHomeScreen> {
+  int _selectedIndex = 0;
+
+  // 2. A list of all the screens for the bottom navigation
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const _HomeContent(),
+      const MyCartScreen(),
+      const _PlaceholderScreen(title: 'Orders'),
+      const ProfileScreen(),
+    ];
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.white,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            // 3. IndexedStack switches between screens without losing their state
+            IndexedStack(
+              index: _selectedIndex,
+              children: _screens,
+            ),
+            // 4. The interactive bottom navigation bar
+            _FloatingBottomNavBar(
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 5. Your original home screen content is now in its own widget
+class _HomeContent extends StatelessWidget {
+  const _HomeContent();
 
   @override
   Widget build(BuildContext context) {
@@ -62,52 +120,153 @@ class GroceryHomeScreen extends StatelessWidget {
       Category(name: 'Tomatoe', imagePath: 'assets/images/tomatoe.png'),
     ];
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    const _TopHeader(),
-                    const SizedBox(height: 20),
-                    const _SearchBar(),
-                    const SizedBox(height: 20),
-                    _PromoBanners(pageController: pageController),
-                    const SizedBox(height: 10),
-                    Center(
-                      child: SmoothPageIndicator(
-                        controller: pageController,
-                        count: 3,
-                        effect: const WormEffect(
-                          dotHeight: 8,
-                          dotWidth: 8,
-                          activeDotColor: Colors.green,
-                          dotColor: Colors.black12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const _CategoryTabs(),
-                    const SizedBox(height: 20),
-                    _ProductGrid(products: products),
-                    const SizedBox(height: 20),
-                    _CategorySection(title: 'Fruits', categories: fruitCategories),
-                    const SizedBox(height: 20),
-                    _CategorySection(title: 'Vegetables', categories: vegetableCategories),
-                    const SizedBox(height: 100), // Space for floating nav bar
-                  ],
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
+              const _TopHeader(),
+              const SizedBox(height: 20),
+              const _SearchBar(),
+              const SizedBox(height: 20),
+              _PromoBanners(pageController: pageController),
+              const SizedBox(height: 10),
+              Center(
+                child: SmoothPageIndicator(
+                  controller: pageController,
+                  count: 3,
+                  effect: const WormEffect(
+                    dotHeight: 8,
+                    dotWidth: 8,
+                    activeDotColor: Colors.green,
+                    dotColor: Colors.black12,
+                  ),
                 ),
               ),
+              const SizedBox(height: 20),
+              const _CategoryTabs(),
+              const SizedBox(height: 20),
+              _ProductGrid(products: products),
+              const SizedBox(height: 20),
+              _CategorySection(title: 'Fruits', categories: fruitCategories),
+              const SizedBox(height: 20),
+              _CategorySection(title: 'Vegetables', categories: vegetableCategories),
+              const SizedBox(height: 120), // Adjusted space for nav bar
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// 6. The Bottom Navigation Bar is now interactive
+class _FloatingBottomNavBar extends StatelessWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const _FloatingBottomNavBar({
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        margin: const EdgeInsets.all(20),
+        height: 70,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(Icons.home, 'Home', 0),
+            _buildNavItemWithBadge(Icons.shopping_cart, 'Cart', '0', 1),
+            _buildNavItem(Icons.list_alt, 'Orders', 2),
+            _buildNavItem(Icons.person, 'Profile', 3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = currentIndex == index;
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque, // Makes the whole area tappable
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: isSelected ? Colors.orange : Colors.grey, size: 28),
+          Text(label, style: TextStyle(color: isSelected ? Colors.orange : Colors.grey, fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItemWithBadge(IconData icon, String label, String badgeCount, int index) {
+    final isSelected = currentIndex == index;
+    return GestureDetector(
+      onTap: () => onTap(index),
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: isSelected ? Colors.orange : Colors.grey, size: 28),
+              Text(label, style: TextStyle(color: isSelected ? Colors.orange : Colors.grey, fontSize: 10)),
+            ],
+          ),
+          Positioned(
+            top: 8,
+            right: 4,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+              child: Text(badgeCount, style: const TextStyle(color: Colors.white, fontSize: 10)),
             ),
           ),
-          const _FloatingBottomNavBar(),
         ],
+      ),
+    );
+  }
+}
+
+// 7. A simple placeholder for screens you haven't built yet
+class _PlaceholderScreen extends StatelessWidget {
+  final String title;
+  const _PlaceholderScreen({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: Colors.white,
+      ),
+      body: Center(
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -122,23 +281,29 @@ class _TopHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.location_on, color: Colors.amber, size: 28),
+            CircleAvatar(
+              backgroundColor: Colors.amber,
+                child: const Icon(Icons.location_on, color: Colors.white, size: 28)),
             const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Your Location', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                const Text('Gandhinagar, Gujarat.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14,color: Color(0xFF407A47))),
+                Text('Your Location', style: TextStyle(color: Colors.red, fontSize: 12,fontWeight: FontWeight.w900)),
+                const Text('Gandhinagar, Gujarat.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF407A47))),
               ],
             ),
           ],
         ),
         IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.wallet, size: 28,color: Colors.amber,),
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => AddMoneyScreen()));
+          },
+          icon: const Icon(Icons.wallet, size: 28, color: Colors.amber),
         ),
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
+          },
           icon: const Icon(Icons.menu, size: 28),
         ),
       ],
@@ -190,7 +355,6 @@ class _PromoBanners extends StatefulWidget {
 }
 
 class _PromoBannersState extends State<_PromoBanners> {
-  // A list of our banner images
   final List<String> _bannerImages = [
     'assets/images/Banner1.png',
     'assets/images/ban.png',
@@ -203,28 +367,20 @@ class _PromoBannersState extends State<_PromoBanners> {
   @override
   void initState() {
     super.initState();
-    // Start the timer when the widget is initialized
     _startTimer();
   }
 
   @override
   void dispose() {
-    // Cancel the timer when the widget is removed from the screen
     _timer?.cancel();
     super.dispose();
   }
 
   void _startTimer() {
-    // Create a periodic timer that fires every 3 seconds
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_currentPage < _bannerImages.length - 1) {
-        _currentPage++;
-      } else {
-        // Loop back to the first page
-        _currentPage = 0;
-      }
+      if (!mounted) return;
+      _currentPage = (_currentPage + 1) % _bannerImages.length;
 
-      // Animate to the next page
       if (widget.pageController.hasClients) {
         widget.pageController.animateToPage(
           _currentPage,
@@ -237,7 +393,6 @@ class _PromoBannersState extends State<_PromoBanners> {
 
   @override
   Widget build(BuildContext context) {
-    // This helper widget creates a rounded image banner.
     Widget buildBannerImage(String imagePath) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -246,7 +401,6 @@ class _PromoBannersState extends State<_PromoBanners> {
           child: Image.asset(
             imagePath,
             fit: BoxFit.cover,
-            // Add an error builder for robustness
             errorBuilder: (context, error, stackTrace) {
               return const Center(child: Icon(Icons.image_not_supported, color: Colors.grey));
             },
@@ -259,7 +413,6 @@ class _PromoBannersState extends State<_PromoBanners> {
       height: 160,
       child: PageView(
         controller: widget.pageController,
-        // Update the current page when the user swipes manually
         onPageChanged: (int page) {
           setState(() {
             _currentPage = page;
@@ -270,6 +423,7 @@ class _PromoBannersState extends State<_PromoBanners> {
     );
   }
 }
+
 class _CategoryTabs extends StatelessWidget {
   const _CategoryTabs();
   @override
@@ -333,8 +487,9 @@ class _ProductGrid extends StatelessWidget {
       itemBuilder: (context, index) {
         final product = products[index];
         return GestureDetector(
-          onTap: (){
-           Navigator.push(context, MaterialPageRoute(builder: (context)=>ProductDetailScreen()));
+          onTap: () {
+            // This should pass the specific product, but keeping it as is per request.
+            Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen()));
           },
           child: Container(
             padding: const EdgeInsets.all(12),
@@ -347,12 +502,11 @@ class _ProductGrid extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Center(child: Image.asset(product.imagePath, fit: BoxFit.cover,height: 150,width: 150,)),
+                  child: Center(child: Image.asset(product.imagePath, fit: BoxFit.cover, height: 150, width: 150)),
                 ),
                 const SizedBox(height: 10),
                 Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 Text(product.unit, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                //const Spacer(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -362,7 +516,10 @@ class _ProductGrid extends StatelessWidget {
                       radius: 16,
                       child: IconButton(
                         padding: EdgeInsets.zero,
-                        onPressed: () {},
+                        onPressed: () {
+                          const snackBar = SnackBar(content: Text('Product added to cart',textAlign: TextAlign.center,),behavior: SnackBarBehavior.floating,elevation: 10,margin: EdgeInsets.all(90));
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        },
                         icon: const Icon(Icons.add, color: Colors.white, size: 18),
                       ),
                     ),
@@ -396,8 +553,6 @@ class _CategorySection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        // We increase the overall height of the horizontal list significantly.
-        // This height is now the main factor controlling the image size.
         SizedBox(
           height: 110,
           child: ListView.builder(
@@ -405,19 +560,15 @@ class _CategorySection extends StatelessWidget {
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
-              // We give each item a fixed width to control its size in the list.
               return SizedBox(
                 width: 95,
                 child: Padding(
                   padding: const EdgeInsets.only(right: 12.0),
                   child: Column(
                     children: [
-                      // --- THIS IS THE KEY CHANGE ---
-                      // Expanded makes its child (the Container) fill all available
-                      // vertical space within the Column.
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.all(8.0), // Reduced padding to maximize image area
+                          padding: const EdgeInsets.all(8.0),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
@@ -426,11 +577,9 @@ class _CategorySection extends StatelessWidget {
                           child: Image.asset(
                             category.imagePath,
                             fit: BoxFit.cover,
-
                           ),
                         ),
                       ),
-                      // -------------------------------
                       const SizedBox(height: 8),
                       Text(
                         category.name,
@@ -443,74 +592,6 @@ class _CategorySection extends StatelessWidget {
                 ),
               );
             },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FloatingBottomNavBar extends StatelessWidget {
-  const _FloatingBottomNavBar();
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        height: 70,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.home, 'Home', true),
-            _buildNavItemWithBadge(Icons.shopping_cart, 'Cart', '0'),
-            _buildNavItem(Icons.list_alt, 'Orders', false),
-            _buildNavItem(Icons.person, 'Profile', false),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: isSelected ? Colors.orange : Colors.grey, size: 28),
-        Text(label, style: TextStyle(color: isSelected ? Colors.orange : Colors.grey, fontSize: 10)),
-      ],
-    );
-  }
-
-  Widget _buildNavItemWithBadge(IconData icon, String label, String badgeCount) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        _buildNavItem(icon, label, false),
-        Positioned(
-          top: 8,
-          right: 12,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              badgeCount,
-              style: const TextStyle(color: Colors.white, fontSize: 10),
-            ),
           ),
         ),
       ],

@@ -2,6 +2,8 @@ import 'package:day_to_day_fresh/home_screen/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../checkout_screen/checkout_screen.dart';
+
 // Data model to represent an item in the cart
 class CartItem {
   final String name;
@@ -235,7 +237,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () {
-            // TODO: Handle checkout navigation
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>CheckoutScreen()));
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.amber,

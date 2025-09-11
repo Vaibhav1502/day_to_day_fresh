@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../cart_screen/cart_screen.dart';
+
 // Dummy data model for related products
 class RelatedProduct {
   final String name;
@@ -106,7 +108,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              const Icon(Icons.shopping_cart_outlined, color: Colors.black87, size: 28),
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black87,size: 28,),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context)=>MyCartScreen())),
+              ),
+              //const Icon(Icons.shopping_cart_outlined, color: Colors.black87, size: 28),
               Positioned(
                 top: -4,
                 right: -4,

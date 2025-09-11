@@ -37,8 +37,6 @@ class GroceryHomeScreen extends StatefulWidget {
 
 class _GroceryHomeScreenState extends State<GroceryHomeScreen> {
   int _selectedIndex = 0;
-
-  // 2. A list of all the screens for the bottom navigation
   late final List<Widget> _screens;
 
   @override
@@ -47,7 +45,7 @@ class _GroceryHomeScreenState extends State<GroceryHomeScreen> {
     _screens = [
       const _HomeContent(),
       const MyCartScreen(),
-      const _PlaceholderScreen(title: 'Orders'),
+      const _PlaceholderScreen(title: 'Orders Under Development '),
       const ProfileScreen(),
     ];
   }
@@ -58,33 +56,92 @@ class _GroceryHomeScreenState extends State<GroceryHomeScreen> {
     });
   }
 
+  // Helper widget to build the cart icon with a badge
+  Widget _buildCartIconWithBadge() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.shopping_cart),
+        Positioned(
+          top: -4,
+          right: -8,
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              '0', // Badge count
+              style: TextStyle(color: Colors.white, fontSize: 10),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Stack(
-          children: [
-            // 3. IndexedStack switches between screens without losing their state
-            IndexedStack(
-              index: _selectedIndex,
-              children: _screens,
+    // --- START OF CHANGE ---
+    // Wrapped the Scaffold in a WillPopScope to handle the back button press.
+    return WillPopScope(
+      onWillPop: () async {
+        // This is the logic that executes when the back button is pressed.
+        if (_selectedIndex != 0) {
+          // If we are not on the home tab (index 0), switch back to it.
+          setState(() {
+            _selectedIndex = 0;
+          });
+          // Return false to prevent the app from closing.
+          return false;
+        }
+        // If we are already on the home tab, allow the app to close.
+        return true;
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.white,
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: IndexedStack(
+            index: _selectedIndex,
+            children: _screens,
+          ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: Colors.orange,
+          unselectedItemColor: Colors.grey,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
             ),
-            // 4. The interactive bottom navigation bar
-            _FloatingBottomNavBar(
-              currentIndex: _selectedIndex,
-              onTap: _onItemTapped,
+            BottomNavigationBarItem(
+              icon: _buildCartIconWithBadge(),
+              label: 'Cart',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.list_alt),
+              label: 'Orders',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
         ),
       ),
     );
+    // --- END OF CHANGE ---
   }
 }
 
-// 5. Your original home screen content is now in its own widget
+// Your original home screen content, now self-contained
 class _HomeContent extends StatelessWidget {
   const _HomeContent();
 
@@ -154,7 +211,7 @@ class _HomeContent extends StatelessWidget {
               _CategorySection(title: 'Fruits', categories: fruitCategories),
               const SizedBox(height: 20),
               _CategorySection(title: 'Vegetables', categories: vegetableCategories),
-              const SizedBox(height: 120), // Adjusted space for nav bar
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -163,94 +220,7 @@ class _HomeContent extends StatelessWidget {
   }
 }
 
-// 6. The Bottom Navigation Bar is now interactive
-class _FloatingBottomNavBar extends StatelessWidget {
-  final int currentIndex;
-  final Function(int) onTap;
-
-  const _FloatingBottomNavBar({
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        margin: const EdgeInsets.all(20),
-        height: 70,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.home, 'Home', 0),
-            _buildNavItemWithBadge(Icons.shopping_cart, 'Cart', '0', 1),
-            _buildNavItem(Icons.list_alt, 'Orders', 2),
-            _buildNavItem(Icons.person, 'Profile', 3),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    final isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque, // Makes the whole area tappable
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: isSelected ? Colors.orange : Colors.grey, size: 28),
-          Text(label, style: TextStyle(color: isSelected ? Colors.orange : Colors.grey, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItemWithBadge(IconData icon, String label, String badgeCount, int index) {
-    final isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: isSelected ? Colors.orange : Colors.grey, size: 28),
-              Text(label, style: TextStyle(color: isSelected ? Colors.orange : Colors.grey, fontSize: 10)),
-            ],
-          ),
-          Positioned(
-            top: 8,
-            right: 4,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-              child: Text(badgeCount, style: const TextStyle(color: Colors.white, fontSize: 10)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// 7. A simple placeholder for screens you haven't built yet
+// A simple placeholder for screens you haven't built yet
 class _PlaceholderScreen extends StatelessWidget {
   final String title;
   const _PlaceholderScreen({required this.title});
@@ -282,13 +252,13 @@ class _TopHeader extends StatelessWidget {
         Row(
           children: [
             CircleAvatar(
-              backgroundColor: Colors.amber,
+                backgroundColor: Colors.amber,
                 child: const Icon(Icons.location_on, color: Colors.white, size: 28)),
             const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Your Location', style: TextStyle(color: Colors.red, fontSize: 12,fontWeight: FontWeight.w900)),
+                const Text('Your Location', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w900)),
                 const Text('Gandhinagar, Gujarat.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF407A47))),
               ],
             ),
@@ -296,13 +266,13 @@ class _TopHeader extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => AddMoneyScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const AddMoneyScreen()));
           },
           icon: const Icon(Icons.wallet, size: 28, color: Colors.amber),
         ),
         IconButton(
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
           },
           icon: const Icon(Icons.menu, size: 28),
         ),
@@ -488,7 +458,6 @@ class _ProductGrid extends StatelessWidget {
         final product = products[index];
         return GestureDetector(
           onTap: () {
-            // This should pass the specific product, but keeping it as is per request.
             Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen()));
           },
           child: Container(
@@ -517,7 +486,7 @@ class _ProductGrid extends StatelessWidget {
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         onPressed: () {
-                          const snackBar = SnackBar(content: Text('Product added to cart',textAlign: TextAlign.center,),behavior: SnackBarBehavior.floating,elevation: 10,margin: EdgeInsets.all(90));
+                          const snackBar = SnackBar(content: Text('Product added to cart', textAlign: TextAlign.center), behavior: SnackBarBehavior.floating, elevation: 10, margin: EdgeInsets.all(90));
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         },
                         icon: const Icon(Icons.add, color: Colors.white, size: 18),
